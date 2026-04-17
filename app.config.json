@@ -1,0 +1,14 @@
+{
+  "$schema": "./.dt-app/app.config.schema.json",
+  "environmentUrl": "https://placeholder.dynatrace.com/",
+  "app": {
+    "name": "ai-optimus",
+    "version": "0.0.0",
+    "description": "Making Dynatrace agentic AI easy to understand and use",
+    "id": "my.ai.optimus",
+    "scopes": [
+      { "name": "storage:logs:read", "comment": "default template" },
+      { "name": "storage:buckets:read", "comment": "default template" }
+    ]
+  }
+}
