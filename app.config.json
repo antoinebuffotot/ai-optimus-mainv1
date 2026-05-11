@@ -1,0 +1,52 @@
+{
+  "$schema": "./.dt-app/app.config.schema.json",
+  "environmentUrl": "https://xac61091.sprint.apps.dynatracelabs.com/",
+  "app": {
+    "name": "ai-optimus",
+    "version": "0.0.0",
+    "description": "Making Dynatrace agentic AI easy to understand and use",
+    "id": "my.ai.optimus",
+    "scopes": [
+      {
+        "name": "storage:logs:read",
+        "comment": "DQL queries against logs"
+      },
+      {
+        "name": "storage:buckets:read",
+        "comment": "DQL queries against buckets"
+      },
+      {
+        "name": "storage:bizevents:read",
+        "comment": "Read BizEvents for KPI queries (UC1-6)"
+      },
+      {
+        "name": "settings:objects:read",
+        "comment": "Read tenant capability/feature settings (UC1, UC2)"
+      },
+      {
+        "name": "state:app-states:read",
+        "comment": "Read shared capability status cache (UC1, UC2)"
+      },
+      {
+        "name": "state:app-states:write",
+        "comment": "Write shared capability status cache (UC1, UC2)"
+      },
+      {
+        "name": "state:user-app-states:read",
+        "comment": "Read per-user setup/preference state (UC3, UC4, UC5)"
+      },
+      {
+        "name": "state:user-app-states:write",
+        "comment": "Write per-user setup/preference state (UC3, UC4, UC5)"
+      },
+      {
+        "name": "storage:spans:read",
+        "comment": "Read Spans for KPI queries (UC1-6)"
+      },
+      {
+        "name": "storage:system:read",
+        "comment": "Read Systems Events for KPI queries (UC1-6)"
+      }
+    ]
+  }
+}

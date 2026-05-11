@@ -1,0 +1,112 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-05-10",
+  "categories": [
+    "Intelligence",
+    "Assist",
+    "Workflows",
+    "MCP",
+    "LogAI",
+    "AIObservability"
+  ],
+  "capabilities": [
+    {
+      "id": "davis-intelligence",
+      "name": "Davis AI Intelligence",
+      "category": "Intelligence",
+      "description": "Causal AI engine that detects anomalies, identifies root causes, and predicts incidents across the full stack.",
+      "useCases": [
+        "Automated root-cause analysis",
+        "Predictive problem detection",
+        "Topology-aware anomaly correlation"
+      ],
+      "docUrl": "https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["davis-assist", "ai-workflows"]
+    },
+    {
+      "id": "davis-assist",
+      "name": "Davis Assist",
+      "category": "Assist",
+      "description": "Generative AI assistant that summarises problems, drafts queries, and explains observability data in natural language.",
+      "useCases": [
+        "Incident summarisation",
+        "Natural-language DQL authoring",
+        "Guided investigations"
+      ],
+      "docUrl": "https://docs.dynatrace.com/docs/dynatrace-intelligence/agentic-and-generative-ai",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["davis-intelligence", "mcp-server"]
+    },
+    {
+      "id": "ai-workflows",
+      "name": "AI-powered Workflows",
+      "category": "Workflows",
+      "description": "Automated workflows that orchestrate remediation, ticket routing, and notifications driven by Davis insights.",
+      "useCases": [
+        "Auto-remediation",
+        "Incident routing to ITSM",
+        "Scheduled AI-driven actions"
+      ],
+      "docUrl": "https://docs.dynatrace.com/docs/dynatrace-intelligence/dynatrace-intelligence-integrations/agentic-workflows",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["davis-intelligence", "mcp-server"]
+    },
+    {
+      "id": "mcp-server",
+      "name": "Dynatrace MCP Server",
+      "category": "MCP",
+      "description": "Model Context Protocol server that exposes Dynatrace observability data to AI agents and IDE tooling.",
+      "useCases": [
+        "IDE-side AI assistance",
+        "Cross-platform agent integration",
+        "Programmatic context retrieval"
+      ],
+      "docUrl": "https://docs.dynatrace.com/docs/dynatrace-intelligence/dynatrace-mcp",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["davis-assist", "dtctl"]
+    },
+    {
+      "id": "dtctl",
+      "name": "DTCTL",
+      "category": "MCP",
+      "description": "Command-line interface for interacting with Dynatrace from terminals and IDEs, scriptable for automation.",
+      "useCases": [
+        "Local IDE workflows",
+        "Pipeline automation",
+        "Ad-hoc investigations"
+      ],
+      "docUrl": "https://github.com/dynatrace-oss/dtctl",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["mcp-server"]
+    },
+    {
+      "id": "log-ai-forecasting",
+      "name": "Log AI Forecasting",
+      "category": "LogAI",
+      "description": "Time-series forecasting on log-derived metrics for proactive capacity and behaviour prediction.",
+      "useCases": [
+        "Capacity planning",
+        "Predictive alerting",
+        "Seasonality detection"
+      ],
+      "docUrl": "https://docs.dynatrace.com/docs/dynatrace-intelligence/reference/ai-models/forecast-analysis",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["davis-intelligence"]
+    },
+    {
+      "id": "ai-observability",
+      "name": "AI Observability",
+      "category": "AIObservability",
+      "description": "End-to-end observability for AI/LLM applications: token usage, latency, quality, and cost.",
+      "useCases": [
+        "LLM latency and error tracking",
+        "Token-cost monitoring",
+        "Prompt/response quality signals"
+      ],
+      "docUrl": "https://docs.dynatrace.com/docs/observe/dynatrace-for-ai-observability",
+      "videoUrl": null,
+      "relatedCapabilityIds": ["davis-intelligence", "log-ai-forecasting"]
+    }
+  ]
+}
