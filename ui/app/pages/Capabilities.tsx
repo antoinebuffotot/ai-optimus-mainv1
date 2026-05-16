@@ -1,11 +1,25 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Flex } from "@dynatrace/strato-components/layouts";
 import { Heading, Paragraph, Link } from "@dynatrace/strato-components/typography";
 import { PageHeader } from "../components/PageHeader";
 import { useCapabilityStatus } from "../hooks/useCapabilityStatus";
+import { useCapabilityUsage } from "../hooks/useCapabilityUsage";
 
 export const Capabilities = () => {
   const { views, fetchedAt, isStale, setStatus } = useCapabilityStatus();
+  const { results: usageResults } = useCapabilityUsage();
+
+  const usageByCapability = useMemo(() => {
+    const map = new Map<string, { met: number; total: number }>();
+    for (const r of usageResults) {
+      const entry = map.get(r.capabilityId) ?? { met: 0, total: 0 };
+      entry.total += 1;
+      if (r.state === "met") entry.met += 1;
+      map.set(r.capabilityId, entry);
+    }
+    return map;
+  }, [usageResults]);
+
   const activeCount = views.filter(
     (v) => v.status === "active" || v.status === "partial"
   ).length;
@@ -29,7 +43,9 @@ export const Capabilities = () => {
       </Paragraph>
 
       <Flex flexFlow="wrap" gap={16}>
-        {views.map((v) => (
+        {views.map((v) => {
+          const usage = usageByCapability.get(v.id);
+          return (
           <Flex
             key={v.id}
             flexDirection="column"
@@ -42,7 +58,18 @@ export const Capabilities = () => {
               borderRadius: "8px",
             }}
           >
-            <Heading level={4}>{v.name}</Heading>
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              gap={8}
+            >
+              <Heading level={4}>{v.name}</Heading>
+              {usage && (
+                <Paragraph>
+                  <strong>{usage.met}</strong> / {usage.total} used
+                </Paragraph>
+              )}
+            </Flex>
             <Paragraph>{v.category}</Paragraph>
             <Paragraph>{v.description}</Paragraph>
             <Paragraph>
@@ -57,7 +84,8 @@ export const Capabilities = () => {
               {v.status === "inactive" ? "Enable / Learn more" : "Documentation"}
             </Link>
           </Flex>
-        ))}
+          );
+        })}
       </Flex>
     </Flex>
   );

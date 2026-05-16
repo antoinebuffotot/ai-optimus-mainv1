@@ -71,7 +71,13 @@ export const UsageAssessment = () => {
       </Flex>
 
       <Flex flexDirection="column" gap={16}>
-        {grouped.map(({ capId, capability, criteria }) => (
+        {grouped.map(({ capId, capability, criteria }) => {
+          const counts = criteria
+            .map((c) => c.count)
+            .filter((n): n is number => n !== null);
+          const total = counts.reduce((acc, n) => acc + n, 0);
+          const hasAnyCount = counts.length > 0;
+          return (
           <Flex
             key={capId}
             flexDirection="column"
@@ -82,7 +88,19 @@ export const UsageAssessment = () => {
               borderRadius: "8px",
             }}
           >
-            <Heading level={4}>{capability?.name ?? capId}</Heading>
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              gap={8}
+            >
+              <Heading level={4}>{capability?.name ?? capId}</Heading>
+              {hasAnyCount && (
+                <Paragraph>
+                  <strong>{total.toLocaleString()}</strong>{" "}
+                  {total === 1 ? "event" : "events"}
+                </Paragraph>
+              )}
+            </Flex>
             <Paragraph>{capability?.category}</Paragraph>
             {criteria.map((c) => (
               <Flex key={c.id} justifyContent="space-between" gap={16}>
@@ -96,7 +114,8 @@ export const UsageAssessment = () => {
               </Flex>
             ))}
           </Flex>
-        ))}
+          );
+        })}
       </Flex>
     </Flex>
   );

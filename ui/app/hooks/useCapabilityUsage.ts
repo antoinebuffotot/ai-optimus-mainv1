@@ -10,6 +10,7 @@ export interface CriterionResult {
   capabilityId: string;
   label: string;
   state: CriterionState;
+  count: number | null;
   error: string | null;
 }
 
@@ -53,11 +54,19 @@ const evaluateCriterion = async (
       throw new Error(`Query ended in state ${response.state}`);
     }
     const records = response.result?.records ?? [];
+    const rawCount = records.length > 0 ? (records[0] as { c?: unknown }).c : 0;
+    const count =
+      typeof rawCount === "number"
+        ? rawCount
+        : typeof rawCount === "string" && rawCount !== ""
+          ? Number(rawCount)
+          : 0;
     return {
       id: c.id,
       capabilityId: c.capabilityId,
       label: c.label,
       state: records.length > 0 ? "met" : "unmet",
+      count: Number.isFinite(count) ? count : 0,
       error: null,
     };
   } catch (err) {
@@ -66,6 +75,7 @@ const evaluateCriterion = async (
       capabilityId: c.capabilityId,
       label: c.label,
       state: "unknown",
+      count: null,
       error: err instanceof Error ? err.message : String(err),
     };
   }
@@ -85,6 +95,7 @@ const initialResults: CriterionResult[] = usageCriteria.map((c) => ({
   capabilityId: c.capabilityId,
   label: c.label,
   state: "loading",
+  count: null,
   error: null,
 }));
 

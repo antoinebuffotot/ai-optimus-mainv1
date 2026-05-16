@@ -3,7 +3,7 @@
   "environmentUrl": "https://xac61091.sprint.apps.dynatracelabs.com/",
   "app": {
     "name": "ai-optimus",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Making Dynatrace agentic AI easy to understand and use",
     "id": "my.ai.optimus",
     "scopes": [
@@ -46,6 +46,14 @@
       {
         "name": "storage:system:read",
         "comment": "Read Systems Events for KPI queries (UC1-6)"
+      },
+      {
+        "name": "storage:events:read",
+        "comment": "Read Systems Events for KPI queries (UC1-6)"
+      },
+      {
+        "name": "automation:workflows:read",
+        "comment": "Read Workflows"
       }
     ]
   }
