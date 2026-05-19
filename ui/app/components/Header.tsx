@@ -28,6 +28,9 @@ export const Header = () => {
         <AppHeader.NavigationItem as={Link} to="/demo">
           Demo
         </AppHeader.NavigationItem>
+        <AppHeader.NavigationItem as={Link} to="/admin">
+          Admin
+        </AppHeader.NavigationItem>
       </AppHeader.Navigation>
     </AppHeader>
   );

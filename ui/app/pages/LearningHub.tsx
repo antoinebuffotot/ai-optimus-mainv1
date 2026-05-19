@@ -51,20 +51,28 @@ export const LearningHub = () => {
         description="Browse capability overviews, key use cases, and documentation. Search filters in real time."
       />
 
-      <Flex alignItems="center" gap={24} flexWrap="wrap">
-        <Flex flexDirection="column" style={{ minWidth: 280 }}>
-          <Heading level={3}>
-            Overall learning progress: {overallScore}%
-          </Heading>
-          {userEmail && userEmail !== "anonymous" && (
-            <Paragraph>for {userEmail}</Paragraph>
-          )}
+      <Flex gap={32} alignItems="center" flexWrap="wrap">
+        <Flex
+          flexDirection="column"
+          alignItems="center"
+          padding={16}
+          style={{
+            minWidth: 180,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.04)",
+          }}
+        >
+          <Heading level={2}>{overallScore}%</Heading>
+          <Paragraph>Overall learning progress</Paragraph>
         </Flex>
         <ProgressCircle
           value={overallScore}
           size="large"
           aria-label="Overall learning progress"
         />
+        {userEmail && userEmail !== "anonymous" && (
+          <Paragraph>for {userEmail}</Paragraph>
+        )}
       </Flex>
 
       <TextInput

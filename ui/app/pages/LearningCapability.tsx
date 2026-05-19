@@ -69,86 +69,171 @@ export const LearningCapability = () => {
       </Flex>
 
       {content ? (
-        <>
-          <Paragraph>{content.overview}</Paragraph>
+        (() => {
+          const allPrereqsOpened = content.prerequisites.every((p) =>
+            isOpened(cap.id, "prerequisite", p.id)
+          );
+          return (
+            <>
+              <Paragraph>{content.overview}</Paragraph>
 
-          <Heading level={3}>Prerequisites</Heading>
-          <Accordion
-            multiple
-            onExpandChange={(value) => {
-              const ids = Array.isArray(value) ? value : [value];
-              ids
-                .map((v) => String(v))
-                .filter((id) => id && !isOpened(cap.id, "prerequisite", id))
-                .forEach((id) =>
-                  trackItemOpen(cap.id, "prerequisite", id)
+              <Heading level={3}>Prerequisites</Heading>
+              <Paragraph>
+                <em>
+                  Open each prerequisite in order, from top to bottom. The next
+                  item unlocks once the previous one is opened.
+                </em>
+              </Paragraph>
+              <Accordion
+                multiple
+                onExpandChange={(value) => {
+                  const ids = Array.isArray(value) ? value : [value];
+                  ids
+                    .map((v) => String(v))
+                    .filter((id) => id && !isOpened(cap.id, "prerequisite", id))
+                    .forEach((id) =>
+                      trackItemOpen(cap.id, "prerequisite", id)
+                    );
+                }}
+              >
+                {content.prerequisites.map((p, idx) => {
+                  const previousOpened =
+                    idx === 0 ||
+                    isOpened(
+                      cap.id,
+                      "prerequisite",
+                      content.prerequisites[idx - 1].id
+                    );
+                  const opened = isOpened(cap.id, "prerequisite", p.id);
+                  const disabled = !previousOpened && !opened;
+                  return (
+                    <Accordion.Section
+                      key={p.id}
+                      id={p.id}
+                      disabled={disabled}
+                    >
+                      <Accordion.SectionLabel>
+                        {p.title}
+                        {opened ? " ✓" : disabled ? " 🔒" : ""}
+                      </Accordion.SectionLabel>
+                      <Accordion.SectionContent>
+                        <Flex flexDirection="column" gap={8}>
+                          <Paragraph>{p.body}</Paragraph>
+                          {p.link && (
+                            <Link
+                              target="_blank"
+                              href={p.link.href}
+                              rel="noopener noreferrer"
+                            >
+                              {p.link.label}
+                            </Link>
+                          )}
+                        </Flex>
+                      </Accordion.SectionContent>
+                    </Accordion.Section>
+                  );
+                })}
+              </Accordion>
+
+              {(() => {
+                const groups =
+                  content.stepGroups && content.stepGroups.length > 0
+                    ? content.stepGroups
+                    : [{ id: "steps", title: "Steps", startIndex: 0 }];
+                return (
+                  <>
+                    <Paragraph>
+                      <em>
+                        Open each step in order, from top to bottom. All
+                        prerequisites above must be opened before the first
+                        step unlocks. Ordering carries across sub-sections.
+                      </em>
+                    </Paragraph>
+                    {groups.map((group, groupIdx) => {
+                      const nextStart =
+                        groups[groupIdx + 1]?.startIndex ??
+                        content.steps.length;
+                      const groupSteps = content.steps.slice(
+                        group.startIndex,
+                        nextStart
+                      );
+                      return (
+                        <React.Fragment key={group.id}>
+                          <Heading level={3}>{group.title}</Heading>
+                          <Accordion
+                            multiple
+                            onExpandChange={(value) => {
+                              const ids = Array.isArray(value)
+                                ? value
+                                : [value];
+                              ids
+                                .map((v) => String(v))
+                                .filter(
+                                  (id) =>
+                                    id && !isOpened(cap.id, "step", id)
+                                )
+                                .forEach((id) =>
+                                  trackItemOpen(cap.id, "step", id)
+                                );
+                            }}
+                          >
+                            {groupSteps.map((s, localIdx) => {
+                              const globalIdx = group.startIndex + localIdx;
+                              const previousStepOpened =
+                                globalIdx === 0 ||
+                                isOpened(
+                                  cap.id,
+                                  "step",
+                                  content.steps[globalIdx - 1].id
+                                );
+                              const opened = isOpened(cap.id, "step", s.id);
+                              const unlocked =
+                                allPrereqsOpened && previousStepOpened;
+                              const disabled = !unlocked && !opened;
+                              return (
+                                <Accordion.Section
+                                  key={s.id}
+                                  id={s.id}
+                                  disabled={disabled}
+                                >
+                                  <Accordion.SectionLabel>
+                                    {`${globalIdx + 1}. ${s.title}`}
+                                    {opened ? " ✓" : disabled ? " 🔒" : ""}
+                                  </Accordion.SectionLabel>
+                                  <Accordion.SectionContent>
+                                    <Flex flexDirection="column" gap={8}>
+                                      <Paragraph>{s.body}</Paragraph>
+                                      {s.code && (
+                                        <CodeSnippet
+                                          language={s.code.language}
+                                        >
+                                          {s.code.content}
+                                        </CodeSnippet>
+                                      )}
+                                      {s.link && (
+                                        <Link
+                                          target="_blank"
+                                          href={s.link.href}
+                                          rel="noopener noreferrer"
+                                        >
+                                          {s.link.label}
+                                        </Link>
+                                      )}
+                                    </Flex>
+                                  </Accordion.SectionContent>
+                                </Accordion.Section>
+                              );
+                            })}
+                          </Accordion>
+                        </React.Fragment>
+                      );
+                    })}
+                  </>
                 );
-            }}
-          >
-            {content.prerequisites.map((p) => (
-              <Accordion.Section key={p.id} id={p.id}>
-                <Accordion.SectionLabel>
-                  {p.title}
-                  {isOpened(cap.id, "prerequisite", p.id) ? " ✓" : ""}
-                </Accordion.SectionLabel>
-                <Accordion.SectionContent>
-                  <Flex flexDirection="column" gap={8}>
-                    <Paragraph>{p.body}</Paragraph>
-                    {p.link && (
-                      <Link
-                        target="_blank"
-                        href={p.link.href}
-                        rel="noopener noreferrer"
-                      >
-                        {p.link.label}
-                      </Link>
-                    )}
-                  </Flex>
-                </Accordion.SectionContent>
-              </Accordion.Section>
-            ))}
-          </Accordion>
-
-          <Heading level={3}>Steps</Heading>
-          <Accordion
-            multiple
-            onExpandChange={(value) => {
-              const ids = Array.isArray(value) ? value : [value];
-              ids
-                .map((v) => String(v))
-                .filter((id) => id && !isOpened(cap.id, "step", id))
-                .forEach((id) => trackItemOpen(cap.id, "step", id));
-            }}
-          >
-            {content.steps.map((s, idx) => (
-              <Accordion.Section key={s.id} id={s.id}>
-                <Accordion.SectionLabel>
-                  {`${idx + 1}. ${s.title}`}
-                  {isOpened(cap.id, "step", s.id) ? " ✓" : ""}
-                </Accordion.SectionLabel>
-                <Accordion.SectionContent>
-                  <Flex flexDirection="column" gap={8}>
-                    <Paragraph>{s.body}</Paragraph>
-                    {s.code && (
-                      <CodeSnippet language={s.code.language}>
-                        {s.code.content}
-                      </CodeSnippet>
-                    )}
-                    {s.link && (
-                      <Link
-                        target="_blank"
-                        href={s.link.href}
-                        rel="noopener noreferrer"
-                      >
-                        {s.link.label}
-                      </Link>
-                    )}
-                  </Flex>
-                </Accordion.SectionContent>
-              </Accordion.Section>
-            ))}
-          </Accordion>
-        </>
+              })()}
+            </>
+          );
+        })()
       ) : (
         <Paragraph>
           Detailed prerequisites and steps for this subject are not yet

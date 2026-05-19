@@ -117,7 +117,16 @@ export const Assessment = () => {
       />
 
       <Flex gap={32} alignItems="center">
-        <Flex flexDirection="column">
+        <Flex
+          flexDirection="column"
+          alignItems="center"
+          padding={16}
+          style={{
+            minWidth: 180,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.04)",
+          }}
+        >
           <Heading level={2}>{score}%</Heading>
           <Paragraph>Coverage score</Paragraph>
         </Flex>
@@ -156,7 +165,15 @@ export const Assessment = () => {
               <Paragraph>
                 <strong>{v.name}</strong> — {v.category}
               </Paragraph>
-              <Paragraph>{v.status}</Paragraph>
+              <Paragraph
+                style={
+                  v.status === "active"
+                    ? { color: "var(--dt-colors-text-success-default)" }
+                    : undefined
+                }
+              >
+                {v.status}
+              </Paragraph>
             </Flex>
           ))
         )}
@@ -181,6 +198,19 @@ export const Assessment = () => {
           state.
         </Paragraph>
         <Flex gap={24} flexWrap="wrap">
+          <Flex
+            flexDirection="column"
+            alignItems="center"
+            padding={16}
+            style={{
+              minWidth: 180,
+              borderRadius: 8,
+              background: "rgba(0,0,0,0.04)",
+            }}
+          >
+            <Heading level={2}>{learningStats.completionPercent}%</Heading>
+            <Paragraph>Completion (all users)</Paragraph>
+          </Flex>
           <Flex
             flexDirection="column"
             alignItems="center"
@@ -219,19 +249,6 @@ export const Assessment = () => {
           >
             <Heading level={2}>{learningStats.startedSubjectsCount}</Heading>
             <Paragraph>Subjects started (all users)</Paragraph>
-          </Flex>
-          <Flex
-            flexDirection="column"
-            alignItems="center"
-            padding={16}
-            style={{
-              minWidth: 180,
-              borderRadius: 8,
-              background: "rgba(0,0,0,0.04)",
-            }}
-          >
-            <Heading level={2}>{learningStats.completionPercent}%</Heading>
-            <Paragraph>Completion (all users)</Paragraph>
           </Flex>
         </Flex>
 

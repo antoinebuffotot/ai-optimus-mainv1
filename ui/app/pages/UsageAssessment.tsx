@@ -55,7 +55,16 @@ export const UsageAssessment = () => {
       />
 
       <Flex gap={32} alignItems="center">
-        <Flex flexDirection="column">
+        <Flex
+          flexDirection="column"
+          alignItems="center"
+          padding={16}
+          style={{
+            minWidth: 180,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.04)",
+          }}
+        >
           <Heading level={2}>{score}%</Heading>
           <Paragraph>Usage score</Paragraph>
         </Flex>
@@ -95,7 +104,13 @@ export const UsageAssessment = () => {
             >
               <Heading level={4}>{capability?.name ?? capId}</Heading>
               {hasAnyCount && (
-                <Paragraph>
+                <Paragraph
+                  style={
+                    total > 0
+                      ? { color: "var(--dt-colors-text-primary-default)" }
+                      : undefined
+                  }
+                >
                   <strong>{total.toLocaleString()}</strong>{" "}
                   {total === 1 ? "event" : "events"}
                 </Paragraph>
@@ -106,7 +121,15 @@ export const UsageAssessment = () => {
               <Flex key={c.id} justifyContent="space-between" gap={16}>
                 <Paragraph>{c.label}</Paragraph>
                 <Paragraph>
-                  <strong>{stateLabel(c.state)}</strong>
+                  <strong
+                    style={
+                      c.state === "met"
+                        ? { color: "var(--dt-colors-text-success-default)" }
+                        : undefined
+                    }
+                  >
+                    {stateLabel(c.state)}
+                  </strong>
                   {c.error && (
                     <span title={c.error}> (query error — see tooltip)</span>
                   )}

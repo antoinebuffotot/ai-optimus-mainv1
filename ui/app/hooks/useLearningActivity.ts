@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentUserDetails } from "@dynatrace-sdk/app-environment";
 import { useAppState, useSetAppState } from "@dynatrace-sdk/react-hooks";
 import {
@@ -8,7 +8,8 @@ import {
 } from "../lib/learning-content";
 
 const SHARED_KEY = "ai-optimus.learn.activity-shared.v1";
-const SHARED_TTL = "now+365d";
+// The state-service caps cross-user app state validUntilTime at now+90d.
+const SHARED_TTL = "now+90d";
 const FALLBACK_PREFIX = "ai-optimus.learn.activity";
 
 export type LearningItemKind = "prerequisite" | "step";
@@ -324,9 +325,23 @@ const applyItemOpen = (
   };
 };
 
+const isMissingKeyError = (
+  err: Error | undefined,
+  details: { code?: number } | undefined
+): boolean => {
+  if (!err) return false;
+  if (details?.code === 404) return true;
+  return /unknown key|not found/i.test(err.message);
+};
+
 export const useLearningActivity = (): LearningActivityApi => {
   const userEmail = useMemo(() => getUserEmail(), []);
-  const { data, refetch, error: readError } = useAppState({ key: SHARED_KEY });
+  const {
+    data,
+    refetch,
+    error: readError,
+    errorDetails: readErrorDetails,
+  } = useAppState({ key: SHARED_KEY });
   const { execute: setShared, error: writeError } = useSetAppState();
 
   const remote = useMemo(() => parseShared(data?.value), [data]);
@@ -345,11 +360,42 @@ export const useLearningActivity = (): LearningActivityApi => {
     writeFallback(userEmail, state);
   }, [userEmail, state]);
 
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current) return;
+    if (!isMissingKeyError(readError, readErrorDetails)) return;
+    seededRef.current = true;
+    void (async () => {
+      try {
+        await setShared({
+          key: SHARED_KEY,
+          body: {
+            value: JSON.stringify(emptyShared()),
+            validUntilTime: SHARED_TTL,
+          },
+        });
+        try {
+          await refetch();
+        } catch {
+          // ignore
+        }
+      } catch {
+        // ignore — write may be denied; localStorage fallback still works
+      }
+    })();
+  }, [readError, readErrorDetails, refetch, setShared]);
+
   const persistRemote = useCallback(
     async (next: ActivityState) => {
+      let freshShared: SharedActivity = emptyShared();
       try {
         const fresh = await refetch();
-        const freshShared = parseShared(fresh?.value);
+        freshShared = parseShared(fresh?.value);
+      } catch {
+        // First write on a tenant returns 404 ("Unknown key"); proceed with
+        // an empty shared map so the very first setShared creates the key.
+      }
+      try {
         const updated: SharedActivity = {
           users: { ...freshShared.users, [userEmail]: next },
           updatedAt: Date.now(),
@@ -358,9 +404,13 @@ export const useLearningActivity = (): LearningActivityApi => {
           key: SHARED_KEY,
           body: { value: JSON.stringify(updated), validUntilTime: SHARED_TTL },
         });
-        await refetch();
+        try {
+          await refetch();
+        } catch {
+          // ignore — the next read will see the new value
+        }
       } catch {
-        // local fallback already written by the effect above
+        // localStorage fallback is already kept current by the effect above
       }
     },
     [refetch, setShared, userEmail]
@@ -405,6 +455,10 @@ export const useLearningActivity = (): LearningActivityApi => {
     [state]
   );
 
+  const effectiveReadError = isMissingKeyError(readError, readErrorDetails)
+    ? undefined
+    : readError;
+
   return {
     userEmail,
     state,
@@ -412,7 +466,7 @@ export const useLearningActivity = (): LearningActivityApi => {
     isOpened,
     trackSubjectOpen,
     trackItemOpen,
-    error: writeError ?? readError ?? null,
+    error: writeError ?? effectiveReadError ?? null,
   };
 };
 
@@ -422,10 +476,18 @@ export interface AllLearningActivityApi {
   isLoading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  resetUser: (email: string) => Promise<void>;
 }
 
 export const useAllLearningActivity = (): AllLearningActivityApi => {
-  const { data, refetch, isLoading, error } = useAppState({ key: SHARED_KEY });
+  const {
+    data,
+    refetch,
+    isLoading,
+    error,
+    errorDetails,
+  } = useAppState({ key: SHARED_KEY });
+  const { execute: setShared } = useSetAppState();
 
   const users = useMemo<UserActivity[]>(() => {
     const remote = parseShared(data?.value);
@@ -446,5 +508,53 @@ export const useAllLearningActivity = (): AllLearningActivityApi => {
     }
   }, [refetch]);
 
-  return { users, stats, isLoading, error: error ?? null, refresh };
+  const resetUser = useCallback(
+    async (email: string) => {
+      let freshShared: SharedActivity = emptyShared();
+      try {
+        const fresh = await refetch();
+        freshShared = parseShared(fresh?.value);
+      } catch {
+        // 404 = shared key not created yet; nothing remote to reset.
+      }
+      try {
+        const remainingUsers: Record<string, ActivityState> = {};
+        for (const [key, value] of Object.entries(freshShared.users)) {
+          if (key !== email) remainingUsers[key] = value;
+        }
+        const updated: SharedActivity = {
+          users: remainingUsers,
+          updatedAt: Date.now(),
+        };
+        await setShared({
+          key: SHARED_KEY,
+          body: { value: JSON.stringify(updated), validUntilTime: SHARED_TTL },
+        });
+        try {
+          await refetch();
+        } catch {
+          // ignore
+        }
+      } catch {
+        // surfaced via `error`; localStorage cleanup still runs below
+      }
+      try {
+        window.localStorage.removeItem(fallbackKey(email));
+      } catch {
+        // ignore
+      }
+    },
+    [refetch, setShared]
+  );
+
+  const effectiveError = isMissingKeyError(error, errorDetails) ? null : error ?? null;
+
+  return {
+    users,
+    stats,
+    isLoading,
+    error: effectiveError,
+    refresh,
+    resetUser,
+  };
 };

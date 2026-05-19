@@ -31,16 +31,35 @@ export const Capabilities = () => {
         description="All Davis AI, Assist, Workflows, and MCP capabilities — activation status, descriptions, and upgrade paths."
       />
 
-      <Paragraph>
-        <strong>
-          {activeCount} of {views.length}
-        </strong>{" "}
-        capabilities active
-        {fetchedAt
-          ? ` — last sync ${new Date(fetchedAt).toLocaleString()}`
-          : " — not synced yet"}
-        {isStale && " (stale)"}
-      </Paragraph>
+      <Flex gap={32} alignItems="center">
+        <Flex
+          flexDirection="column"
+          alignItems="center"
+          padding={16}
+          style={{
+            minWidth: 180,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.04)",
+          }}
+        >
+          <Heading level={2}>
+            {activeCount} / {views.length}
+          </Heading>
+          <Paragraph>Capabilities active</Paragraph>
+        </Flex>
+        <Flex flexDirection="column">
+          <Paragraph>
+            {fetchedAt
+              ? `Last sync: ${new Date(fetchedAt).toLocaleString()}`
+              : "Not synced yet"}
+          </Paragraph>
+          {isStale && (
+            <Paragraph>
+              Data is older than 24 hours — refresh to update.
+            </Paragraph>
+          )}
+        </Flex>
+      </Flex>
 
       <Flex flexFlow="wrap" gap={16}>
         {views.map((v) => {
