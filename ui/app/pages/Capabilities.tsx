@@ -10,11 +10,24 @@ export const Capabilities = () => {
   const { results: usageResults } = useCapabilityUsage();
 
   const usageByCapability = useMemo(() => {
-    const map = new Map<string, { met: number; total: number }>();
+    const map = new Map<
+      string,
+      { met: number; total: number; utilizationCount: number; hasCount: boolean }
+    >();
     for (const r of usageResults) {
-      const entry = map.get(r.capabilityId) ?? { met: 0, total: 0 };
+      const entry =
+        map.get(r.capabilityId) ?? {
+          met: 0,
+          total: 0,
+          utilizationCount: 0,
+          hasCount: false,
+        };
       entry.total += 1;
       if (r.state === "met") entry.met += 1;
+      if (typeof r.count === "number") {
+        entry.utilizationCount += r.count;
+        entry.hasCount = true;
+      }
       map.set(r.capabilityId, entry);
     }
     return map;
@@ -89,6 +102,23 @@ export const Capabilities = () => {
                 </Paragraph>
               )}
             </Flex>
+            {usage?.hasCount && (
+              <Flex
+                alignItems="center"
+                gap={8}
+                padding={8}
+                style={{
+                  borderRadius: 6,
+                  background: "rgba(0,0,0,0.04)",
+                  alignSelf: "flex-start",
+                }}
+              >
+                <Heading level={5}>
+                  {usage.utilizationCount.toLocaleString()}
+                </Heading>
+                <Paragraph>total utilizations (30d)</Paragraph>
+              </Flex>
+            )}
             <Paragraph>{v.category}</Paragraph>
             <Paragraph>{v.description}</Paragraph>
             <Paragraph>

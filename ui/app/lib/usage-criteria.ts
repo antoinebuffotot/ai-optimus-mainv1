@@ -58,3 +58,38 @@ export const usageCriteria: UsageCriterion[] = [
 export const usageCapabilityIds: string[] = Array.from(
   new Set(usageCriteria.map((c) => c.capabilityId))
 );
+
+// Per-capability queries that fetch the most recent usage events (timestamp + user)
+// for display in the Usage Assessment accordion. Each query aliases the
+// user-identifying column to `user` so the UI can render a stable schema.
+export interface LatestUsageQuery {
+  capabilityId: string;
+  dql: string;
+}
+
+export const latestUsageQueries: LatestUsageQuery[] = [
+  {
+    capabilityId: "davis-intelligence",
+    dql: 'fetch dt.system.events, from:now()-30d | filter dt.app.id == "dynatrace.davis.problems" AND resource == "/platform/document/v1/documents" | lookup [fetch dt.system.events | dedup user.email,user.id | fields user.email,user.id], sourceField:user.id, lookupField:user.id | fields timestamp, user = lookup.user.email | sort timestamp desc | limit 20',
+  },
+  {
+    capabilityId: "davis-assist",
+    dql: 'fetch dt.system.events, from:now()-30d | filter event.kind == "GENAI_EVENT" | filter event.type == "GenAI Skill Invocation" | fields timestamp, user = user_email | sort timestamp desc | limit 20',
+  },
+  {
+    capabilityId: "ai-workflows",
+    dql: 'fetch dt.system.events, from:now()-30d | filter dt.automation_engine.state == "SUCCESS" | filter dt.automation_engine.action.app == "dynatrace.davis.copilot.workflow.actions" | fields timestamp, dt.automation_engine.workflow.title, dt.automation_engine.task.name | sort timestamp desc | limit 20',
+  },
+  {
+    capabilityId: "mcp-server",
+    dql: 'fetch dt.system.events, from:now()-30d | filter server == "dynatrace-mcp" | filter event.type == "MCP Tool Invocation" | fields timestamp, user = user_email | sort timestamp desc | limit 20',
+  },
+  {
+    capabilityId: "log-ai-forecasting",
+    dql: 'fetch dt.system.events, from:now()-30d | filter event.kind == "QUERY_EXECUTION_EVENT" and client.source == "dt.statistics.ui.ForecastAnalyzer" | fields timestamp, user = user.email | sort timestamp desc | limit 20',
+  },
+  {
+    capabilityId: "ai-observability",
+    dql: 'fetch spans, from:now()-30d | filter isNotNull(gen_ai.system) or isNotNull(gen_ai.provider.name) | fields timestamp = start_time, service.name, k8s.deployment.name, k8s.container.name, gen_ai.response.model, gen_ai.provider.name | sort timestamp desc | limit 20',
+  },
+];
