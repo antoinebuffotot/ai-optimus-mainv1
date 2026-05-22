@@ -3,7 +3,7 @@
   "environmentUrl": "https://xac61091.sprint.apps.dynatracelabs.com/",
   "app": {
     "name": "ai-optimus",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Making Dynatrace agentic AI easy to understand and use",
     "id": "my.ai.optimus",
     "scopes": [

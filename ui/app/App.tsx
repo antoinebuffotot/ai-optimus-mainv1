@@ -13,6 +13,7 @@ import { IntegrationExplorer } from "./pages/IntegrationExplorer";
 import { IntegrationDetail } from "./pages/IntegrationDetail";
 import { Demo } from "./pages/Demo";
 import { DemoVertical } from "./pages/DemoVertical";
+import { DemoAiTravelAdvisor } from "./pages/DemoAiTravelAdvisor";
 import { Admin } from "./pages/Admin";
 
 export const App = () => {
@@ -37,6 +38,10 @@ export const App = () => {
             element={<IntegrationDetail />}
           />
           <Route path="/demo" element={<Demo />} />
+          <Route
+            path="/demo/ai-travel-advisor"
+            element={<DemoAiTravelAdvisor />}
+          />
           <Route path="/demo/:verticalId" element={<DemoVertical />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>

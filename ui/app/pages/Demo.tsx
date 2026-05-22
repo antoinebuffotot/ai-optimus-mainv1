@@ -12,24 +12,9 @@ interface Vertical {
 
 const verticals: Vertical[] = [
   {
-    id: "airport-ops",
-    name: "Airport operations",
-    blurb: "Flight delays, gate utilisation, baggage system anomalies.",
-  },
-  {
-    id: "ecommerce",
-    name: "E-commerce",
-    blurb: "Order spikes, checkout latency, fraud signals.",
-  },
-  {
-    id: "financial-services",
-    name: "Financial services",
-    blurb: "Transaction fraud detection, latency-sensitive trading APIs.",
-  },
-  {
-    id: "logistics",
-    name: "Logistics",
-    blurb: "Delivery exceptions, route optimisation, fleet telemetry.",
+    id: "ai-travel-advisor",
+    name: "AI travel advisor",
+    blurb: "Trip advisor powered by AI",
   },
 ];
 

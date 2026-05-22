@@ -9,10 +9,8 @@ import type { UserSummary } from "../hooks/useLearningActivity";
 import { useAppState, useSetAppState } from "@dynatrace-sdk/react-hooks";
 import { PageHeader } from "../components/PageHeader";
 import { useCapabilityStatus } from "../hooks/useCapabilityStatus";
-import {
-  computeCoverageScore,
-  getCapability,
-} from "../lib/capability-registry";
+import { useCapabilityUsage } from "../hooks/useCapabilityUsage";
+import { getCapability } from "../lib/capability-registry";
 import { useAllLearningActivity } from "../hooks/useLearningActivity";
 import { learningContent } from "../lib/learning-content";
 
@@ -59,10 +57,27 @@ const userColumns: SimpleTableColumnDef<UserSummary>[] = [
 ];
 
 export const Assessment = () => {
-  const { views, fetchedAt, isStale, isLoading, error, refresh } =
-    useCapabilityStatus();
-  const score = computeCoverageScore(views);
-  const inactive = views.filter((v) => v.status === "inactive");
+  const { views, isLoading, error, refresh } = useCapabilityStatus();
+  const {
+    results: usageResults,
+    score,
+    evaluatedAt,
+    isLoading: isUsageLoading,
+    refresh: refreshUsage,
+  } = useCapabilityUsage();
+
+  const isCapabilityActive = useMemo(() => {
+    const map = new Map<string, boolean>();
+    for (const r of usageResults) {
+      if (r.state === "met") map.set(r.capabilityId, true);
+      else if (!map.has(r.capabilityId)) map.set(r.capabilityId, false);
+    }
+    return map;
+  }, [usageResults]);
+
+  const inactive = views.filter(
+    (v) => isCapabilityActive.get(v.id) === false
+  );
   const { stats: learningStats, refresh: refreshLearningStats } =
     useAllLearningActivity();
 
@@ -79,11 +94,19 @@ export const Assessment = () => {
   const { execute: writeScore, error: writeError } = useSetAppState();
 
   useEffect(() => {
-    if (fetchedAt === null) return;
-    if (stored && stored.score === score && stored.fetchedAt === fetchedAt) {
+    if (evaluatedAt === null) return;
+    if (
+      stored &&
+      stored.score === score &&
+      stored.fetchedAt === evaluatedAt
+    ) {
       return;
     }
-    const payload: StoredScore = { version: "1", score, fetchedAt };
+    const payload: StoredScore = {
+      version: "1",
+      score,
+      fetchedAt: evaluatedAt,
+    };
     writeScore({
       key: SCORE_STATE_KEY,
       body: {
@@ -95,7 +118,7 @@ export const Assessment = () => {
       .catch(() => {
         // surfaced via writeError below
       });
-  }, [score, fetchedAt, stored, writeScore, refetchStored]);
+  }, [score, evaluatedAt, stored, writeScore, refetchStored]);
 
   return (
     <Flex flexDirection="column" padding={32} gap={24}>
@@ -106,9 +129,10 @@ export const Assessment = () => {
           <Button
             onClick={() => {
               void refresh();
+              void refreshUsage();
               void refreshLearningStats();
             }}
-            loading={isLoading}
+            loading={isLoading || isUsageLoading}
             variant="default"
           >
             Refresh
@@ -128,21 +152,20 @@ export const Assessment = () => {
           }}
         >
           <Heading level={2}>{score}%</Heading>
-          <Paragraph>Coverage score</Paragraph>
+          <Paragraph>Usage score</Paragraph>
         </Flex>
         <Flex flexDirection="column">
           <Paragraph>
-            Last synced: <strong>{formatTimestamp(fetchedAt)}</strong>
+            Evaluated at: <strong>{formatTimestamp(evaluatedAt)}</strong>
+          </Paragraph>
+          <Paragraph>
+            A capability counts as "in use" only when <em>all</em> of its
+            criteria are met.
           </Paragraph>
           {stored && (
             <Paragraph>
               Previously stored: <strong>{stored.score}%</strong> on{" "}
               {formatTimestamp(stored.fetchedAt)}
-            </Paragraph>
-          )}
-          {isStale && (
-            <Paragraph>
-              Data is older than 24 hours — refresh to update.
             </Paragraph>
           )}
           {error && <Paragraph>Sync error: {error.message}</Paragraph>}
@@ -160,22 +183,31 @@ export const Assessment = () => {
         {views.length === 0 ? (
           <Paragraph>No capability data available yet.</Paragraph>
         ) : (
-          views.map((v) => (
-            <Flex key={v.id} justifyContent="space-between" gap={16}>
-              <Paragraph>
-                <strong>{v.name}</strong> — {v.category}
-              </Paragraph>
-              <Paragraph
-                style={
-                  v.status === "active"
-                    ? { color: "var(--dt-colors-text-success-default)" }
-                    : undefined
-                }
-              >
-                {v.status}
-              </Paragraph>
-            </Flex>
-          ))
+          views.map((v) => {
+            const activeFlag = isCapabilityActive.get(v.id);
+            const statusLabel =
+              activeFlag === undefined
+                ? "unknown"
+                : activeFlag
+                  ? "active"
+                  : "inactive";
+            return (
+              <Flex key={v.id} justifyContent="space-between" gap={16}>
+                <Paragraph>
+                  <strong>{v.name}</strong> — {v.category}
+                </Paragraph>
+                <Paragraph
+                  style={
+                    activeFlag === true
+                      ? { color: "var(--dt-colors-text-success-default)" }
+                      : undefined
+                  }
+                >
+                  {statusLabel}
+                </Paragraph>
+              </Flex>
+            );
+          })
         )}
       </Flex>
 
