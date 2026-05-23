@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Flex } from "@dynatrace/strato-components/layouts";
 import { Heading, Paragraph } from "@dynatrace/strato-components/typography";
 import { Button } from "@dynatrace/strato-components/buttons";
 import { Accordion } from "@dynatrace/strato-components/content";
+import { TextInput } from "@dynatrace/strato-components/forms";
 import { PageHeader } from "../components/PageHeader";
 import {
   computeOverallScore,
@@ -11,8 +12,94 @@ import {
   hasStartedSubject,
   useAllLearningActivity,
 } from "../hooks/useLearningActivity";
+import { useDemoUrls, DemoUrlEntry } from "../hooks/useDemoUrls";
 import { learningContent } from "../lib/learning-content";
 import { getCapability } from "../lib/capability-registry";
+
+const DemoUrlRow = ({
+  entry,
+  onSave,
+  onReset,
+}: {
+  entry: DemoUrlEntry;
+  onSave: (id: string, url: string) => Promise<void>;
+  onReset: (id: string) => Promise<void>;
+}) => {
+  const [draft, setDraft] = useState(entry.effectiveUrl);
+  const [busy, setBusy] = useState<"save" | "reset" | null>(null);
+
+  useEffect(() => {
+    setDraft(entry.effectiveUrl);
+  }, [entry.effectiveUrl]);
+
+  const dirty = draft.trim() !== entry.effectiveUrl;
+
+  const handleSave = async () => {
+    const next = draft.trim();
+    if (!next || next === entry.effectiveUrl) return;
+    setBusy("save");
+    try {
+      await onSave(entry.id, next);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleReset = async () => {
+    setBusy("reset");
+    try {
+      await onReset(entry.id);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Flex
+      flexDirection="column"
+      padding={12}
+      gap={8}
+      style={{
+        borderRadius: 8,
+        border: "1px solid var(--dt-colors-border-neutral-default)",
+      }}
+    >
+      <Flex justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={8}>
+        <Heading level={4}>{entry.name}</Heading>
+        <Paragraph>
+          {entry.hasOverride ? "Custom override" : "Default URL"}
+        </Paragraph>
+      </Flex>
+      <Paragraph>
+        <strong>Default:</strong> {entry.defaultUrl}
+      </Paragraph>
+      <TextInput
+        type="url"
+        value={draft}
+        onChange={setDraft}
+        placeholder="https://example.com"
+      />
+      <Flex gap={8} flexWrap="wrap">
+        <Button
+          variant="accent"
+          onClick={() => void handleSave()}
+          disabled={!dirty || draft.trim() === ""}
+          loading={busy === "save"}
+        >
+          Save
+        </Button>
+        <Button
+          variant="default"
+          onClick={() => void handleReset()}
+          disabled={!entry.hasOverride}
+          loading={busy === "reset"}
+        >
+          Reset to default
+        </Button>
+      </Flex>
+    </Flex>
+  );
+};
 
 const formatTimestamp = (ts: number | null | undefined): string =>
   !ts ? "—" : new Date(ts).toLocaleString();
@@ -29,6 +116,12 @@ const subjectStatus = (
 export const Admin = () => {
   const { users, stats, isLoading, error, refresh, resetUser } =
     useAllLearningActivity();
+  const {
+    entries: demoUrlEntries,
+    setUrl: setDemoUrl,
+    resetUrl: resetDemoUrl,
+    error: demoUrlError,
+  } = useDemoUrls();
   const [resettingEmail, setResettingEmail] = useState<string | null>(null);
   const [confirmEmail, setConfirmEmail] = useState<string | null>(null);
 
@@ -189,6 +282,38 @@ export const Admin = () => {
           })}
         </Accordion>
       )}
+
+      <Flex flexDirection="column" gap={12}>
+        <Heading level={2}>Demo URLs</Heading>
+        <Paragraph>
+          URLs that back the iframes on the Demo pages. Changes are shared
+          across all users.
+        </Paragraph>
+        {demoUrlError && (
+          <Paragraph>
+            Demo URL state error: <strong>{demoUrlError.message}</strong>
+          </Paragraph>
+        )}
+        {demoUrlEntries.length === 0 ? (
+          <Paragraph>No demos with configurable URLs.</Paragraph>
+        ) : (
+          <Flex flexFlow="wrap" gap={12}>
+            {demoUrlEntries.map((entry) => (
+              <Flex
+                key={entry.id}
+                flexDirection="column"
+                style={{ minWidth: 360, flex: "1 1 360px" }}
+              >
+                <DemoUrlRow
+                  entry={entry}
+                  onSave={setDemoUrl}
+                  onReset={resetDemoUrl}
+                />
+              </Flex>
+            ))}
+          </Flex>
+        )}
+      </Flex>
     </Flex>
   );
 };

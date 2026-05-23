@@ -1,30 +1,42 @@
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Flex } from "@dynatrace/strato-components/layouts";
-import { Link } from "@dynatrace/strato-components/typography";
+import { Link, Paragraph } from "@dynatrace/strato-components/typography";
 import { PageHeader } from "../components/PageHeader";
+import { useDemoUrls } from "../hooks/useDemoUrls";
 
-const AI_TRAVEL_ADVISOR_URL =
-  "http://aiobsanb202500.westeurope.cloudapp.azure.com:30100/";
+const VERTICAL_ID = "ai-travel-advisor";
 
-export const DemoAiTravelAdvisor = () => (
-  <Flex flexDirection="column" padding={32} gap={16}>
-    <Link as={RouterLink} to="/demo">
-      ← Change vertical
-    </Link>
-    <PageHeader
-      title="AI travel advisor"
-      description="Trip advisor powered by AI"
-    />
-    <iframe
-      src={AI_TRAVEL_ADVISOR_URL}
-      title="AI travel advisor"
-      style={{
-        width: "100%",
-        height: "calc(100vh - 220px)",
-        border: "1px solid var(--dt-colors-border-neutral-default)",
-        borderRadius: 8,
-      }}
-    />
-  </Flex>
-);
+export const DemoAiTravelAdvisor = () => {
+  const { getUrl } = useDemoUrls();
+  const url = getUrl(VERTICAL_ID);
+
+  return (
+    <Flex flexDirection="column" padding={32} gap={16}>
+      <Link as={RouterLink} to="/demo">
+        ← Change vertical
+      </Link>
+      <PageHeader
+        title="AI travel advisor"
+        description="Trip advisor powered by AI"
+      />
+      {url ? (
+        <iframe
+          src={url}
+          title="AI travel advisor"
+          style={{
+            width: "100%",
+            height: "calc(100vh - 220px)",
+            border: "1px solid var(--dt-colors-border-neutral-default)",
+            borderRadius: 8,
+          }}
+        />
+      ) : (
+        <Paragraph>
+          No URL configured for this demo. An admin can set one from the Admin
+          page.
+        </Paragraph>
+      )}
+    </Flex>
+  );
+};

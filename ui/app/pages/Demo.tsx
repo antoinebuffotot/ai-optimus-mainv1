@@ -3,20 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Flex } from "@dynatrace/strato-components/layouts";
 import { Heading, Paragraph, Link } from "@dynatrace/strato-components/typography";
 import { PageHeader } from "../components/PageHeader";
-
-interface Vertical {
-  id: string;
-  name: string;
-  blurb: string;
-}
-
-const verticals: Vertical[] = [
-  {
-    id: "ai-travel-advisor",
-    name: "AI travel advisor",
-    blurb: "Trip advisor powered by AI",
-  },
-];
+import { demoVerticals } from "../lib/demo-registry";
 
 export const Demo = () => (
   <Flex flexDirection="column" padding={32} gap={16}>
@@ -26,7 +13,7 @@ export const Demo = () => (
     />
 
     <Flex flexFlow="wrap" gap={16}>
-      {verticals.map((v) => (
+      {demoVerticals.map((v) => (
         <Flex
           key={v.id}
           flexDirection="column"

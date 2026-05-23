@@ -20,7 +20,7 @@ export const Header = () => {
           Learn
         </AppHeader.NavigationItem>
         <AppHeader.NavigationItem as={Link} to="/setup">
-          Setup
+          IDE Setup
         </AppHeader.NavigationItem>
         <AppHeader.NavigationItem as={Link} to="/integrations">
           Integrations

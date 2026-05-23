@@ -1,52 +1,76 @@
 import React from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
 import { Flex } from "@dynatrace/strato-components/layouts";
-import { Heading, Paragraph, Link } from "@dynatrace/strato-components/typography";
+import {
+  Heading,
+  Paragraph,
+  Link,
+} from "@dynatrace/strato-components/typography";
 import { PageHeader } from "../components/PageHeader";
-
-type SetupType = "mcp" | "dtctl";
-const SETUP_TYPES: SetupType[] = ["mcp", "dtctl"];
-const isSetupType = (v: string | undefined): v is SetupType =>
-  SETUP_TYPES.includes(v as SetupType);
+import { GuideSection } from "../components/GuideSection";
+import { getSetupGuide, setupGuides } from "../lib/setup-content";
 
 export const SetupGuide = () => {
   const { setupType } = useParams();
-  const active = isSetupType(setupType) ? setupType : null;
+  const guide = setupType ? getSetupGuide(setupType) : undefined;
+
+  if (!setupType) {
+    return (
+      <Flex flexDirection="column" padding={32} gap={16}>
+        <PageHeader
+          title="MCP & DTCTL IDE Setup"
+          description="Guided, step-by-step setup of Dynatrace MCP or DTCTL inside your IDE."
+        />
+        <Flex flexFlow="wrap" gap={16}>
+          {setupGuides.map((g) => (
+            <Flex
+              key={g.id}
+              flexDirection="column"
+              gap={8}
+              padding={16}
+              style={{
+                minWidth: "280px",
+                maxWidth: "360px",
+                border: "1px solid var(--dt-colors-border-neutral-default)",
+                borderRadius: "8px",
+              }}
+            >
+              <Heading level={4}>{g.name}</Heading>
+              <Paragraph>{g.overview}</Paragraph>
+              <Link as={RouterLink} to={`/setup/${g.id}`}>
+                Set up {g.id.toUpperCase()} →
+              </Link>
+            </Flex>
+          ))}
+        </Flex>
+      </Flex>
+    );
+  }
+
+  if (!guide) {
+    return (
+      <Flex flexDirection="column" padding={32} gap={16}>
+        <Link as={RouterLink} to="/setup">
+          ← Setup
+        </Link>
+        <Heading level={2}>Setup guide not found</Heading>
+        <Paragraph>
+          No setup guide is available for <strong>{setupType}</strong>.
+        </Paragraph>
+      </Flex>
+    );
+  }
 
   return (
     <Flex flexDirection="column" padding={32} gap={16}>
-      <PageHeader
-        title={active ? `${active.toUpperCase()} setup` : "MCP & DTCTL IDE Setup"}
-        description="Guided, step-by-step setup of Dynatrace MCP or DTCTL inside your IDE."
-      />
+      <Link as={RouterLink} to="/setup">
+        ← Setup
+      </Link>
+      <PageHeader title={guide.name} description={guide.overview} />
 
-      {!active && (
-        <Flex gap={16}>
-          <Link as={RouterLink} to="/setup/mcp">
-            Set up MCP →
-          </Link>
-          <Link as={RouterLink} to="/setup/dtctl">
-            Set up DTCTL →
-          </Link>
-        </Flex>
-      )}
-
-      {active && (
-        <Flex flexDirection="column" gap={8}>
-          <Heading level={3}>Steps</Heading>
-          <Paragraph>1. Choose your IDE (VS Code, IntelliJ, Cursor, Other)</Paragraph>
-          <Paragraph>2. Generate the configuration snippet</Paragraph>
-          <Paragraph>3. Paste it into your IDE settings</Paragraph>
-          <Paragraph>4. Verify the connection</Paragraph>
-          <Paragraph>
-            Step state is persisted to localStorage per ADR-0004 so users can
-            resume after interruptions.
-          </Paragraph>
-          <Link as={RouterLink} to="/setup">
-            ← Back
-          </Link>
-        </Flex>
-      )}
+      {guide.sections.map((section, i) => (
+        <GuideSection key={i} section={section} />
+      ))}
     </Flex>
   );
 };
